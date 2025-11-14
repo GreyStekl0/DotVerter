@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="DotVerter.Domain/DotVerter.Domain.csproj" />
   <Project Path="DotVerter/DotVerter.csproj" />
 </Solution>
