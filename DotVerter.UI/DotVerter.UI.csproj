@@ -26,4 +26,8 @@
         <MauiPlatformSpecificFolder Remove="Platforms\Tizen\" />
     </ItemGroup>
 
+    <ItemGroup>
+        <ProjectReference Include="..\DotVerter.Domain\DotVerter.Domain.csproj" />
+    </ItemGroup>
+
 </Project>
