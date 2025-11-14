@@ -34,6 +34,37 @@
                 HorizontalOptions="End"
                 Margin="20"
                 Text="{Binding SelectedDate, StringFormat='курс на {0:dd MMMM yyyy}'}" />
+            <HorizontalStackLayout Margin="20" Spacing="10">
+                <Picker
+                    FontSize="20"
+                    ItemDisplayBinding="{Binding Currency.Name}"
+                    ItemsSource="{Binding Rates}"
+                    SelectedItem="{Binding CurrencyRateFrom}"
+                    Title="Валюта"
+                    WidthRequest="200" />
+                <Entry
+                    FontSize="20"
+                    Keyboard="Numeric"
+                    Placeholder="0"
+                    Text="{Binding AmountFrom}"
+                    WidthRequest="150" />
+            </HorizontalStackLayout>
+
+            <HorizontalStackLayout Margin="20" Spacing="10">
+                <Picker
+                    FontSize="20"
+                    ItemDisplayBinding="{Binding Currency.Name}"
+                    ItemsSource="{Binding Rates}"
+                    SelectedItem="{Binding CurrencyRateTo}"
+                    Title="Валюта"
+                    WidthRequest="200" />
+                <Entry
+                    FontSize="20"
+                    Keyboard="Numeric"
+                    Placeholder="0"
+                    Text="{Binding AmountTo}"
+                    WidthRequest="150" />
+            </HorizontalStackLayout>
         </VerticalStackLayout>
     </ContentPage.Content>
 </ContentPage>
