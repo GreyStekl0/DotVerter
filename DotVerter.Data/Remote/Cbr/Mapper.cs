@@ -22,7 +22,18 @@ public static class Mapper
                 Nominal = valuteDto.Nominal,
                 RublesPerNominal = valuteDto.Value
             })
-            .ToArray();
+            .ToList();
+        
+        rates.Add(new CurrencyRate
+        {
+            Currency = new Currency
+            {
+                CharCode = "RUB",
+                Name = "Российский рубль"
+            },
+            Nominal = 1,
+            RublesPerNominal = 1.0m
+        });
 
         return new RatesForDate
         {

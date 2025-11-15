@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<ContentPage
+    x:Class="DotVerter.UI.Converter"
+    x:DataType="vm:ConverterViewModel"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:icons="http://www.aathifmahir.com/dotnet/2022/maui/icons"
+    xmlns:vm="clr-namespace:DotVerter.UI"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+    <ContentPage.Content>
+        <VerticalStackLayout>
+            <Label
+                FontSize="40"
+                HorizontalOptions="Center"
+                Margin="20"
+                Text="Конвертер валют" />
+            <HorizontalStackLayout
+                HorizontalOptions="End"
+                Margin="20"
+                Spacing="10">
+                <Label
+                    FontSize="20"
+                    Text="Дата"
+                    VerticalOptions="Center" />
+                <DatePicker
+                    Date="{Binding SelectedDate}"
+                    MaximumDate="{Binding Today}"
+                    MinimumDate="{Binding MinDate}"
+                    VerticalOptions="Center" />
+                <icons:MauiIcon Icon="{icons:Material CalendarMonth}" IconSize="30" />
+            </HorizontalStackLayout>
+            <Label
+                FontSize="20"
+                HorizontalOptions="End"
+                Margin="20"
+                Text="{Binding SelectedDate, StringFormat='курс на {0:dd MMMM yyyy}'}" />
+            <HorizontalStackLayout Margin="20" Spacing="10">
+                <Picker
+                    FontSize="20"
+                    ItemDisplayBinding="{Binding Currency.Name}"
+                    ItemsSource="{Binding Rates}"
+                    SelectedItem="{Binding CurrencyRateFrom}"
+                    Title="Валюта"
+                    WidthRequest="200" />
+                <Entry
+                    FontSize="20"
+                    Keyboard="Numeric"
+                    Placeholder="0"
+                    Text="{Binding AmountFrom}"
+                    WidthRequest="150" />
+            </HorizontalStackLayout>
+
+            <HorizontalStackLayout Margin="20" Spacing="10">
+                <Picker
+                    FontSize="20"
+                    ItemDisplayBinding="{Binding Currency.Name}"
+                    ItemsSource="{Binding Rates}"
+                    SelectedItem="{Binding CurrencyRateTo}"
+                    Title="Валюта"
+                    WidthRequest="200" />
+                <Entry
+                    FontSize="20"
+                    Keyboard="Numeric"
+                    Placeholder="0"
+                    Text="{Binding AmountTo}"
+                    WidthRequest="150" />
+            </HorizontalStackLayout>
+        </VerticalStackLayout>
+    </ContentPage.Content>
+</ContentPage>

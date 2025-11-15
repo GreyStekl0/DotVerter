@@ -7,11 +7,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="Local\" />
+      <ProjectReference Include="..\DotVerter.Domain\DotVerter.Domain.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\DotVerter.Domain\DotVerter.Domain.csproj" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+        <PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
     </ItemGroup>
 
 </Project>
