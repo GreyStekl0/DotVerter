@@ -8,10 +8,10 @@ public partial class ConverterViewModel : ObservableObject
 {
     private readonly IExchangeRateRepository _exchangeRateRepository;
 
-    public static DateTime Today => DateTime.Now.Date;
+    public DateTime Today { get; } = DateTime.Now.Date;
     public DateTime MinDate { get; } = new(1992, 7, 1);
 
-    [ObservableProperty] private DateTime _selectedDate = Today;
+    [ObservableProperty] private DateTime _selectedDate;
 
     [ObservableProperty] private RatesForDate? _ratesForDate;
 
@@ -29,6 +29,7 @@ public partial class ConverterViewModel : ObservableObject
 
     public ConverterViewModel(IExchangeRateRepository exchangeRateRepository)
     {
+        _selectedDate = Today;
         _exchangeRateRepository = exchangeRateRepository;
         _ = LoadRatesAsync(SelectedDate);
     }
