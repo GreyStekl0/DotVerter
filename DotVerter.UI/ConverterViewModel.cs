@@ -98,5 +98,11 @@ public partial class ConverterViewModel : ObservableObject
         var dateOnly = DateOnly.FromDateTime(date);
         RatesForDate = await _exchangeRateRepository.GetRatesAsync(dateOnly);
         Rates = RatesForDate?.Rates;
+        
+        if (Rates != null)
+        {
+            CurrencyRateFrom = Rates.FirstOrDefault(r => r.Currency.CharCode == "RUB");
+            CurrencyRateTo = Rates.FirstOrDefault(r => r.Currency.CharCode == "USD");
+        }
     }
 }
