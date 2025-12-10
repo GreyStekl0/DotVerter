@@ -1,13 +1,24 @@
-namespace Domain.Models;
+using SQLite;
+
+namespace Data.Database.Entities;
 
 /// <summary>
-///     Модель валюты для отображения в UI
+///     Сущность валюты для хранения в SQLite
 /// </summary>
-public class Currency
+[Table("Currencies")]
+internal class CurrencyEntity
 {
+    /// <summary>
+    ///     Первичный ключ (автоинкремент)
+    /// </summary>
+    [PrimaryKey]
+    [AutoIncrement]
+    public int Id { get; set; }
+
     /// <summary>
     ///     Буквенный код валюты (например, USD)
     /// </summary>
+    [Indexed]
     public string CharCode { get; set; } = string.Empty;
 
     /// <summary>
@@ -24,4 +35,10 @@ public class Currency
     ///     Курс валюты
     /// </summary>
     public decimal Value { get; set; }
+
+    /// <summary>
+    ///     Дата курса
+    /// </summary>
+    [Indexed]
+    public DateTime RateDate { get; set; }
 }

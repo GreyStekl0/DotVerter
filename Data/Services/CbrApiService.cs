@@ -1,27 +1,28 @@
 using System.Net.Http.Json;
-using Domain.Models;
-using Domain.Services;
+using Data.Dto;
 
 namespace Data.Services;
 
 /// <summary>
 ///     Сервис для работы с API ЦБ РФ (cbr-xml-daily.ru)
 /// </summary>
-public class CbrApiService(HttpClient httpClient) : ICbrApiService
+internal class CbrApiService(HttpClient httpClient)
 {
     private const string BaseUrl = "https://www.cbr-xml-daily.ru/daily_json.js";
+    private const string ArchiveUrlTemplate = "https://www.cbr-xml-daily.ru/archive/{0:yyyy/MM/dd}/daily_json.js";
 
     public CbrApiService() : this(new HttpClient())
     {
     }
 
-    /// <inheritdoc />
-    public async Task<CbrResponse?> GetLatestRatesAsync()
+    /// <summary>
+    ///     Получить актуальные курсы валют
+    /// </summary>
+    public async Task<CbrResponseDto?> GetLatestRatesAsync()
     {
         try
         {
-            var response = await httpClient.GetFromJsonAsync<CbrResponse>(BaseUrl);
-            return response;
+            return await httpClient.GetFromJsonAsync<CbrResponseDto>(BaseUrl);
         }
         catch (Exception)
         {
@@ -29,23 +30,21 @@ public class CbrApiService(HttpClient httpClient) : ICbrApiService
         }
     }
 
-    /// <inheritdoc />
-    public async Task<Currency?> GetCurrencyByCodeAsync(string charCode)
+    /// <summary>
+    ///     Получить курсы валют на указанную дату
+    /// </summary>
+    public async Task<CbrResponseDto?> GetRatesByDateAsync(DateOnly date)
     {
-        var response = await GetLatestRatesAsync();
+        if (date == DateOnly.FromDateTime(DateTime.Today)) return await GetLatestRatesAsync();
 
-        return response?.Valute.Values
-            .FirstOrDefault(c => c.CharCode.Equals(charCode, StringComparison.OrdinalIgnoreCase));
-    }
-
-    /// <inheritdoc />
-    public async Task<IEnumerable<Currency>> GetAllCurrenciesAsync()
-    {
-        var response = await GetLatestRatesAsync();
-
-        if (response?.Valute == null)
-            return [];
-
-        return response.Valute.Values;
+        try
+        {
+            var url = string.Format(ArchiveUrlTemplate, date.ToDateTime(TimeOnly.MinValue));
+            return await httpClient.GetFromJsonAsync<CbrResponseDto>(url);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
     }
 }
