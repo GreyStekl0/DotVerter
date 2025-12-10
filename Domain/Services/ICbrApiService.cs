@@ -1,6 +1,6 @@
-using Data.Models;
+using Domain.Models;
 
-namespace Data.Services;
+namespace Domain.Services;
 
 /// <summary>
 ///     Интерфейс для работы с API ЦБ РФ

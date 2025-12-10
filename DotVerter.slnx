@@ -1,3 +1,5 @@
 <Solution>
+  <Project Path="Data/Data.csproj" Id="eee7c9d3-1f9c-4d5c-91e6-c30a10e1f114" />
+  <Project Path="Domain/Domain.csproj" Id="770c08f2-3770-4c6a-b21b-78bc45ca3d41" />
   <Project Path="DotVerter/DotVerter.csproj" />
 </Solution>

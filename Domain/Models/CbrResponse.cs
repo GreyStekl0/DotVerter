@@ -1,4 +1,4 @@
-namespace Data.Models;
+namespace Domain.Models;
 
 /// <summary>
 ///     Ответ от API ЦБ РФ с курсами валют

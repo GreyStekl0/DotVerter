@@ -1,4 +1,4 @@
-namespace Data.Models;
+namespace Domain.Models;
 
 /// <summary>
 ///     Модель валюты из API ЦБ РФ
