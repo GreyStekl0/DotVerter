@@ -10,7 +10,7 @@ namespace Data.Repositories;
 
 /// <summary>
 ///     Репозиторий для работы с курсами валют.
-///     Кэширует данные в локальной БД, при отсутствии загружает из сети.
+///     Кэширует данные в локальной БД, при необходимости загружает из сети.
 /// </summary>
 public class CurrencyRepository(string dbPath) : ICurrencyRepository
 {
@@ -20,7 +20,8 @@ public class CurrencyRepository(string dbPath) : ICurrencyRepository
     /// <inheritdoc />
     public async Task<CurrencyRatesResult> GetTodayRatesAsync()
     {
-        return await GetRatesByDateAsync(DateOnly.FromDateTime(DateTime.Today));
+        // Используем московское время для "сегодня", так как API ЦБ работает по МСК
+        return await GetRatesByDateAsync(CbrApiService.GetMoscowToday());
     }
 
     /// <inheritdoc />
@@ -51,7 +52,7 @@ public class CurrencyRepository(string dbPath) : ICurrencyRepository
     }
 
     /// <summary>
-    ///     Загрузить курсы из сети и сохранить в БД
+    ///     Загружает курсы из сети и сохраняет в БД
     /// </summary>
     private async Task<CurrencyRatesResult> FetchAndSaveRatesAsync(DateOnly requestedDate)
     {
@@ -71,13 +72,17 @@ public class CurrencyRepository(string dbPath) : ICurrencyRepository
         }
 
         var dtos = response.Valute.Values;
-        var actualDate = response.Date;
+        
+        // Используем дату из запроса архива, а не из ответа API
+        // Это решает проблему с часовыми поясами
+        var actualDate = response.RequestedArchiveDate ?? requestedDate;
         var requestedDateTime = requestedDate.ToDateTime(TimeOnly.MinValue);
+        var actualDateTime = actualDate.ToDateTime(TimeOnly.MinValue);
 
         Debug.WriteLine($"[API] Received {dtos.Count} currencies, actual date: {actualDate:yyyy-MM-dd}");
 
-        // Сохраняем в БД с обеими датами
-        var entities = dtos.ToEntities(requestedDateTime, actualDate);
+        // Сохраняем в БД с привязкой к датам
+        var entities = dtos.ToEntities(requestedDateTime, actualDateTime);
         var currencyEntities = entities as CurrencyEntity[] ?? entities.ToArray();
         await _dbContext.SaveCurrenciesAsync(currencyEntities);
 
@@ -87,7 +92,7 @@ public class CurrencyRepository(string dbPath) : ICurrencyRepository
         return new CurrencyRatesResult
         {
             RequestedDate = requestedDate,
-            ActualDate = DateOnly.FromDateTime(actualDate),
+            ActualDate = actualDate,
             Currencies = dtos.ToModels()
         };
     }

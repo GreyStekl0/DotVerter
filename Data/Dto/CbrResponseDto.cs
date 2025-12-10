@@ -10,6 +10,11 @@ public class CbrResponseDto
     public string PreviousURL { get; set; } = string.Empty;
     public DateTime Timestamp { get; set; }
     public Dictionary<string, CurrencyDto> Valute { get; set; } = new();
+    
+    /// <summary>
+    ///     Дата из URL архивного запроса (для корректной работы с часовыми поясами)
+    /// </summary>
+    public DateOnly? RequestedArchiveDate { get; set; }
 }
 
 /// <summary>

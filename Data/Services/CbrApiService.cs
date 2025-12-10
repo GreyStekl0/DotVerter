@@ -13,8 +13,20 @@ internal class CbrApiService(HttpClient httpClient)
     private const string ArchiveUrlTemplate = "https://www.cbr-xml-daily.ru/archive/{0}/{1}/{2}/daily_json.js";
     private const int MaxDaysBack = 10; // ћаксимум дней назад дл€ поиска курса
 
+    // ћосковский часовой по€с (UTC+3)
+    private static readonly TimeZoneInfo MoscowTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Russian Standard Time");
+
     public CbrApiService() : this(new HttpClient())
     {
+    }
+
+    /// <summary>
+    ///     ѕолучить текущую дату по московскому времени
+    /// </summary>
+    public static DateOnly GetMoscowToday()
+    {
+        var moscowNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, MoscowTimeZone);
+        return DateOnly.FromDateTime(moscowNow);
     }
 
     /// <summary>
@@ -24,6 +36,7 @@ internal class CbrApiService(HttpClient httpClient)
     public async Task<CbrResponseDto?> GetRatesByDateAsync(DateOnly date)
     {
         Debug.WriteLine($"[API] GetRatesByDateAsync called for date: {date:yyyy-MM-dd}");
+        Debug.WriteLine($"[API] Moscow today: {GetMoscowToday():yyyy-MM-dd}");
 
         // ѕробуем получить курс, если нет Ч идЄм назад по датам
         for (var i = 0; i < MaxDaysBack; i++)
@@ -34,6 +47,11 @@ internal class CbrApiService(HttpClient httpClient)
             var response = await TryGetRatesForDateAsync(targetDate);
 
             if (response == null) continue;
+            
+            // ”станавливаем дату из URL запроса, а не из ответа API
+            // чтобы избежать проблем с часовыми по€сами
+            response.RequestedArchiveDate = targetDate;
+            
             Debug.WriteLine(
                 $"[API] Success! Found {response.Valute.Count} currencies for {targetDate:yyyy-MM-dd}");
             return response;
@@ -50,18 +68,10 @@ internal class CbrApiService(HttpClient httpClient)
     {
         try
         {
-            string url;
-
-            // ƒл€ сегодн€шней даты используем основной URL (может быть быстрее)
-            if (date == DateOnly.FromDateTime(DateTime.Today))
-            {
-                url = BaseUrl;
-            }
-            else
-            {
-                var dt = date.ToDateTime(TimeOnly.MinValue);
-                url = string.Format(ArchiveUrlTemplate, dt.Year, dt.Month.ToString("D2"), dt.Day.ToString("D2"));
-            }
+            // ¬сегда используем архивный URL дл€ получени€ курсов на конкретную дату
+            // ќсновной URL (BaseUrl) возвращает курсы на следующий день
+            var dt = date.ToDateTime(TimeOnly.MinValue);
+            var url = string.Format(ArchiveUrlTemplate, dt.Year, dt.Month.ToString("D2"), dt.Day.ToString("D2"));
 
             Debug.WriteLine($"[API] URL: {url}");
 
