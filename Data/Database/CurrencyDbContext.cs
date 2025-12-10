@@ -24,28 +24,28 @@ internal class CurrencyDbContext(string dbPath)
     }
 
     /// <summary>
-    ///     ѕолучить все курсы на указанную дату
+    ///     ѕолучить все курсы по запрошенной дате
     /// </summary>
-    public async Task<List<CurrencyEntity>> GetCurrenciesByDateAsync(DateTime date)
+    public async Task<List<CurrencyEntity>> GetCurrenciesByRequestedDateAsync(DateTime requestedDate)
     {
         await InitializeAsync();
 
-        var dateOnly = date.Date;
+        var dateOnly = requestedDate.Date;
         return await _database.Table<CurrencyEntity>()
-            .Where(c => c.RateDate == dateOnly)
+            .Where(c => c.RequestedDate == dateOnly)
             .ToListAsync();
     }
 
     /// <summary>
-    ///     ѕроверить, есть ли данные на указанную дату
+    ///     ѕроверить, есть ли данные дл€ запрошенной даты
     /// </summary>
-    public async Task<bool> HasDataForDateAsync(DateTime date)
+    public async Task<bool> HasDataForRequestedDateAsync(DateTime requestedDate)
     {
         await InitializeAsync();
 
-        var dateOnly = date.Date;
+        var dateOnly = requestedDate.Date;
         var count = await _database.Table<CurrencyEntity>()
-            .Where(c => c.RateDate == dateOnly)
+            .Where(c => c.RequestedDate == dateOnly)
             .CountAsync();
 
         return count > 0;

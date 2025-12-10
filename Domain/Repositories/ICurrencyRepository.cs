@@ -11,11 +11,12 @@ public interface ICurrencyRepository
     /// <summary>
     ///     Получить актуальные курсы валют на сегодня
     /// </summary>
-    Task<IEnumerable<Currency>> GetTodayRatesAsync();
+    Task<CurrencyRatesResult> GetTodayRatesAsync();
 
     /// <summary>
-    ///     Получить курсы валют на указанную дату
+    ///     Получить курсы валют на указанную дату.
+    ///     Если на указанную дату курс не установлен, возвращает ближайший предыдущий курс.
     /// </summary>
     /// <param name="date">Дата для получения курсов</param>
-    Task<IEnumerable<Currency>> GetRatesByDateAsync(DateOnly date);
+    Task<CurrencyRatesResult> GetRatesByDateAsync(DateOnly date);
 }

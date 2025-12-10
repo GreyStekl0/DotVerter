@@ -23,12 +23,20 @@ internal static class CurrencyMapper
         };
     }
 
+    /// <summary>
+    ///     Коллекция Entity -> Domain Models
+    /// </summary>
+    public static IEnumerable<Currency> ToModels(this IEnumerable<CurrencyEntity> entities)
+    {
+        return entities.Select(e => e.ToModel());
+    }
+
     extension(CurrencyDto dto)
     {
         /// <summary>
         ///     DTO -> Entity
         /// </summary>
-        public CurrencyEntity ToEntity(DateTime rateDate)
+        public CurrencyEntity ToEntity(DateTime requestedDate, DateTime actualDate)
         {
             return new CurrencyEntity
             {
@@ -36,7 +44,8 @@ internal static class CurrencyMapper
                 Nominal = dto.Nominal,
                 Name = dto.Name,
                 Value = dto.Value,
-                RateDate = rateDate.Date
+                RequestedDate = requestedDate.Date,
+                ActualDate = actualDate.Date
             };
         }
 
@@ -55,22 +64,14 @@ internal static class CurrencyMapper
         }
     }
 
-    /// <summary>
-    ///     Коллекция Entity -> Domain Models
-    /// </summary>
-    public static IEnumerable<Currency> ToModels(this IEnumerable<CurrencyEntity> entities)
-    {
-        return entities.Select(e => e.ToModel());
-    }
-
     extension(IEnumerable<CurrencyDto> dtos)
     {
         /// <summary>
         ///     Коллекция DTO -> Entities
         /// </summary>
-        public IEnumerable<CurrencyEntity> ToEntities(DateTime rateDate)
+        public IEnumerable<CurrencyEntity> ToEntities(DateTime requestedDate, DateTime actualDate)
         {
-            return dtos.Select(d => d.ToEntity(rateDate));
+            return dtos.Select(d => d.ToEntity(requestedDate, actualDate));
         }
 
         /// <summary>

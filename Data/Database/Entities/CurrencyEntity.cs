@@ -37,8 +37,13 @@ internal class CurrencyEntity
     public decimal Value { get; set; }
 
     /// <summary>
-    ///     Дата курса
+    ///     Запрошенная дата (для кэширования)
     /// </summary>
     [Indexed]
-    public DateTime RateDate { get; set; }
+    public DateTime RequestedDate { get; set; }
+
+    /// <summary>
+    ///     Реальная дата курса от ЦБ
+    /// </summary>
+    public DateTime ActualDate { get; set; }
 }
