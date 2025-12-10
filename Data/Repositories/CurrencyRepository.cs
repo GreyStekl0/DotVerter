@@ -26,19 +26,26 @@ public class CurrencyRepository(string dbPath) : ICurrencyRepository
     {
         var requestedDateTime = date.ToDateTime(TimeOnly.MinValue);
 
-        if (!await _dbContext.HasDataForRequestedDateAsync(requestedDateTime))
-            return await FetchAndSaveRatesAsync(date);
-        var entities = await _dbContext.GetCurrenciesByRequestedDateAsync(requestedDateTime);
-        var actualDate = entities.FirstOrDefault()?.ActualDate ?? requestedDateTime;
-
-        return new CurrencyRatesResult
+        // Проверяем наличие данных в БД
+        if (await _dbContext.HasDataForRequestedDateAsync(requestedDateTime))
         {
-            RequestedDate = date,
-            ActualDate = DateOnly.FromDateTime(actualDate),
-            Currencies = entities.ToModels()
-        };
+            // Данные есть в БД — возвращаем их
+            var entities = await _dbContext.GetCurrenciesByRequestedDateAsync(requestedDateTime);
+            var actualDate = entities.FirstOrDefault()?.ActualDate ?? requestedDateTime;
 
-        // Загружаем из сети и сохраняем в БД
+            System.Diagnostics.Debug.WriteLine($"[CACHE] Loaded {entities.Count} currencies from DB for {date}");
+
+            return new CurrencyRatesResult
+            {
+                RequestedDate = date,
+                ActualDate = DateOnly.FromDateTime(actualDate),
+                Currencies = entities.ToModels()
+            };
+        }
+
+        // Данных нет — загружаем из сети и сохраняем в БД
+        System.Diagnostics.Debug.WriteLine($"[API] Fetching data for {date}");
+        return await FetchAndSaveRatesAsync(date);
     }
 
     /// <summary>
@@ -48,21 +55,30 @@ public class CurrencyRepository(string dbPath) : ICurrencyRepository
     {
         var response = await _apiService.GetRatesByDateAsync(requestedDate);
 
+        System.Diagnostics.Debug.WriteLine($"[API] Response: {response?.Valute?.Count ?? 0} currencies");
+
         if (response?.Valute == null || response.Valute.Count == 0)
+        {
+            System.Diagnostics.Debug.WriteLine($"[API] No data received for {requestedDate}");
             return new CurrencyRatesResult
             {
                 RequestedDate = requestedDate,
                 ActualDate = requestedDate,
                 Currencies = []
             };
+        }
 
         var dtos = response.Valute.Values;
         var actualDate = response.Date;
         var requestedDateTime = requestedDate.ToDateTime(TimeOnly.MinValue);
 
+        System.Diagnostics.Debug.WriteLine($"[API] Received {dtos.Count()} currencies, actual date: {actualDate:yyyy-MM-dd}");
+
         // Сохраняем в БД с обеими датами
         var entities = dtos.ToEntities(requestedDateTime, actualDate);
         await _dbContext.SaveCurrenciesAsync(entities);
+
+        System.Diagnostics.Debug.WriteLine($"[DB] Saved {entities.Count()} currencies to DB");
 
         // Возвращаем результат с информацией о датах
         return new CurrencyRatesResult

@@ -24,6 +24,36 @@ internal static class CurrencyMapper
     }
 
     /// <summary>
+    ///     DTO -> Entity
+    /// </summary>
+    public static CurrencyEntity ToEntity(this CurrencyDto dto, DateTime requestedDate, DateTime actualDate)
+    {
+        return new CurrencyEntity
+        {
+            CharCode = dto.CharCode,
+            Nominal = dto.Nominal,
+            Name = dto.Name,
+            Value = dto.Value,
+            RequestedDate = requestedDate.Date,
+            ActualDate = actualDate.Date
+        };
+    }
+
+    /// <summary>
+    ///     DTO -> Domain Model
+    /// </summary>
+    public static Currency ToModel(this CurrencyDto dto)
+    {
+        return new Currency
+        {
+            CharCode = dto.CharCode,
+            Nominal = dto.Nominal,
+            Name = dto.Name,
+            Value = dto.Value
+        };
+    }
+
+    /// <summary>
     ///     Коллекция Entity -> Domain Models
     /// </summary>
     public static IEnumerable<Currency> ToModels(this IEnumerable<CurrencyEntity> entities)
@@ -31,55 +61,19 @@ internal static class CurrencyMapper
         return entities.Select(e => e.ToModel());
     }
 
-    extension(CurrencyDto dto)
+    /// <summary>
+    ///     Коллекция DTO -> Entities
+    /// </summary>
+    public static IEnumerable<CurrencyEntity> ToEntities(this IEnumerable<CurrencyDto> dtos, DateTime requestedDate, DateTime actualDate)
     {
-        /// <summary>
-        ///     DTO -> Entity
-        /// </summary>
-        public CurrencyEntity ToEntity(DateTime requestedDate, DateTime actualDate)
-        {
-            return new CurrencyEntity
-            {
-                CharCode = dto.CharCode,
-                Nominal = dto.Nominal,
-                Name = dto.Name,
-                Value = dto.Value,
-                RequestedDate = requestedDate.Date,
-                ActualDate = actualDate.Date
-            };
-        }
-
-        /// <summary>
-        ///     DTO -> Domain Model
-        /// </summary>
-        public Currency ToModel()
-        {
-            return new Currency
-            {
-                CharCode = dto.CharCode,
-                Nominal = dto.Nominal,
-                Name = dto.Name,
-                Value = dto.Value
-            };
-        }
+        return dtos.Select(d => d.ToEntity(requestedDate, actualDate));
     }
 
-    extension(IEnumerable<CurrencyDto> dtos)
+    /// <summary>
+    ///     Коллекция DTO -> Domain Models
+    /// </summary>
+    public static IEnumerable<Currency> ToModels(this IEnumerable<CurrencyDto> dtos)
     {
-        /// <summary>
-        ///     Коллекция DTO -> Entities
-        /// </summary>
-        public IEnumerable<CurrencyEntity> ToEntities(DateTime requestedDate, DateTime actualDate)
-        {
-            return dtos.Select(d => d.ToEntity(requestedDate, actualDate));
-        }
-
-        /// <summary>
-        ///     Коллекция DTO -> Domain Models
-        /// </summary>
-        public IEnumerable<Currency> ToModels()
-        {
-            return dtos.Select(d => d.ToModel());
-        }
+        return dtos.Select(d => d.ToModel());
     }
 }

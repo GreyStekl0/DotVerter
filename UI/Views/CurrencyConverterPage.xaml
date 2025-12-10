@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="UI.Views.CurrencyConverterPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:UI.ViewModels"
+    xmlns:models="clr-namespace:UI.Models"
+    x:DataType="vm:CurrencyConverterViewModel"
+    Title="Konverter valyut">
+
+    <Grid Padding="16" RowDefinitions="Auto,Auto,Auto,*">
+
+        <HorizontalStackLayout Grid.Row="0" Spacing="10" HorizontalOptions="Center">
+            <Label Text="Data" VerticalOptions="Center" />
+            <DatePicker Date="{Binding SelectedDate}" MaximumDate="{Binding MaxDate}" />
+        </HorizontalStackLayout>
+
+        <Label
+            Grid.Row="1"
+            Text="{Binding RateInfoText}"
+            HorizontalOptions="Center"
+            Margin="0,8"
+            FontSize="12"
+            TextColor="Gray" />
+
+        <ActivityIndicator
+            Grid.Row="2"
+            IsRunning="{Binding IsLoading}"
+            IsVisible="{Binding IsLoading}"
+            HorizontalOptions="Center" />
+
+        <VerticalStackLayout Grid.Row="3" Spacing="16">
+
+            <Frame Padding="12" BorderColor="LightGray" CornerRadius="8">
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                    <Picker
+                        Grid.Column="0"
+                        Title="Valyuta"
+                        ItemsSource="{Binding Currencies}"
+                        SelectedItem="{Binding FromCurrency}"
+                        ItemDisplayBinding="{Binding DisplayName}" />
+                    <Entry
+                        Grid.Column="1"
+                        Text="{Binding FromAmount}"
+                        Keyboard="Numeric"
+                        Placeholder="Summa"
+                        HorizontalTextAlignment="End" />
+                </Grid>
+            </Frame>
+
+            <Frame Padding="12" BorderColor="LightGray" CornerRadius="8">
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                    <Picker
+                        Grid.Column="0"
+                        Title="Valyuta"
+                        ItemsSource="{Binding Currencies}"
+                        SelectedItem="{Binding ToCurrency}"
+                        ItemDisplayBinding="{Binding DisplayName}" />
+                    <Entry
+                        Grid.Column="1"
+                        Text="{Binding ToAmount}"
+                        Keyboard="Numeric"
+                        Placeholder="Summa"
+                        HorizontalTextAlignment="End" />
+                </Grid>
+            </Frame>
+
+        </VerticalStackLayout>
+
+    </Grid>
+
+</ContentPage>
