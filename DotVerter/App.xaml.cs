@@ -1,8 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-
-namespace DotVerter
+﻿namespace DotVerter
 {
-    public partial class App : Application
+    public partial class App
     {
         public App()
         {

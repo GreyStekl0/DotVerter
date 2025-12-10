@@ -1,10 +1,9 @@
-﻿namespace DotVerter
+﻿namespace DotVerter;
+
+public partial class AppShell
 {
-    public partial class AppShell : Shell
+    public AppShell()
     {
-        public AppShell()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

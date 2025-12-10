@@ -1,24 +1,20 @@
-﻿namespace DotVerter
+﻿namespace DotVerter;
+
+public partial class MainPage
 {
-    public partial class MainPage : ContentPage
+    private int count;
+
+    public MainPage()
     {
-        int count = 0;
+        InitializeComponent();
+    }
 
-        public MainPage()
-        {
-            InitializeComponent();
-        }
+    private void OnCounterClicked(object? sender, EventArgs e)
+    {
+        count++;
 
-        private void OnCounterClicked(object? sender, EventArgs e)
-        {
-            count++;
+        CounterBtn.Text = count == 1 ? $"Clicked {count} time" : $"Clicked {count} times";
 
-            if (count == 1)
-                CounterBtn.Text = $"Clicked {count} time";
-            else
-                CounterBtn.Text = $"Clicked {count} times";
-
-            SemanticScreenReader.Announce(CounterBtn.Text);
-        }
+        SemanticScreenReader.Announce(CounterBtn.Text);
     }
 }
