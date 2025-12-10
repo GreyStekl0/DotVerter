@@ -1,6 +1,5 @@
 ﻿using Data.Repositories;
 using Domain.Repositories;
-using Microsoft.Extensions.Logging;
 using UI;
 
 namespace DotVerter;
@@ -24,10 +23,6 @@ public static class MauiProgram
 
         // UI сервисы
         builder.Services.AddUIServices();
-
-#if DEBUG
-        builder.Logging.AddDebug();
-#endif
 
         return builder.Build();
     }
