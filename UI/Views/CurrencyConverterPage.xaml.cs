@@ -16,6 +16,7 @@ public partial class CurrencyConverterPage : ContentPage
 
         if (BindingContext is CurrencyConverterViewModel vm)
         {
+            vm.RestoreState();
             await vm.LoadCurrenciesCommand.ExecuteAsync(null);
         }
     }

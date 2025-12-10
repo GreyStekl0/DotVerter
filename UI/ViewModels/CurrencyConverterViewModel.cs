@@ -10,6 +10,11 @@ namespace UI.ViewModels;
 
 public partial class CurrencyConverterViewModel(ICurrencyRepository repository) : ObservableObject
 {
+    private const string PrefSelectedDate = "SelectedDate";
+    private const string PrefFromCurrency = "FromCurrency";
+    private const string PrefToCurrency = "ToCurrency";
+    private const string PrefFromAmount = "FromAmount";
+
     [ObservableProperty] private ObservableCollection<CurrencyItem> _currencies = [];
 
     [ObservableProperty] private string _fromAmount = "1";
@@ -19,6 +24,7 @@ public partial class CurrencyConverterViewModel(ICurrencyRepository repository) 
     [ObservableProperty] private bool _isLoading;
 
     private bool _isUpdating;
+    private bool _isInitialized;
 
     [ObservableProperty] private DateTime _maxDate = DateTime.Today;
 
@@ -33,23 +39,29 @@ public partial class CurrencyConverterViewModel(ICurrencyRepository repository) 
     partial void OnSelectedDateChanged(DateTime value)
     {
         Debug.WriteLine($"[VM] Date changed to: {value:yyyy-MM-dd}");
+        SaveState();
         _ = LoadCurrenciesAsync();
     }
 
     partial void OnFromCurrencyChanged(CurrencyItem? value)
     {
+        SaveState();
         ConvertFromSource();
     }
 
     partial void OnToCurrencyChanged(CurrencyItem? value)
     {
+        SaveState();
         ConvertFromSource();
     }
 
     partial void OnFromAmountChanged(string value)
     {
         if (!_isUpdating)
+        {
+            SaveState();
             ConvertFromSource();
+        }
     }
 
     partial void OnToAmountChanged(string value)
@@ -79,6 +91,13 @@ public partial class CurrencyConverterViewModel(ICurrencyRepository repository) 
 
             var previousFromCode = FromCurrency?.CharCode;
             var previousToCode = ToCurrency?.CharCode;
+
+            // При первой загрузке используем сохранённые значения
+            if (!_isInitialized)
+            {
+                previousFromCode = Preferences.Default.Get(PrefFromCurrency, "RUB");
+                previousToCode = Preferences.Default.Get(PrefToCurrency, "USD");
+            }
 
             var items = new List<CurrencyItem>
             {
@@ -115,18 +134,53 @@ public partial class CurrencyConverterViewModel(ICurrencyRepository repository) 
                          ?? Currencies.FirstOrDefault(c => c.CharCode == "USD");
 
             Debug.WriteLine($"[VM] FromCurrency: {FromCurrency?.CharCode}, ToCurrency: {ToCurrency?.CharCode}");
+
+            _isInitialized = true;
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"[VM] Exception: {ex.Message}");
             Debug.WriteLine($"[VM] StackTrace: {ex.StackTrace}");
-            RateInfoText = "Oshibka zagruzki kursov";
+            RateInfoText = "Ошибка загрузки курсов";
         }
         finally
         {
             IsLoading = false;
             Debug.WriteLine("[VM] LoadCurrenciesAsync finished");
         }
+    }
+
+    /// <summary>
+    /// Загружает сохранённое состояние из Preferences
+    /// </summary>
+    public void RestoreState()
+    {
+        _isUpdating = true;
+        try
+        {
+            var savedDateTicks = Preferences.Default.Get(PrefSelectedDate, DateTime.Today.Ticks);
+            var savedDate = new DateTime(savedDateTicks);
+            
+            // Убеждаемся, что дата не больше максимальной
+            SelectedDate = savedDate <= MaxDate ? savedDate : MaxDate;
+            
+            FromAmount = Preferences.Default.Get(PrefFromAmount, "1");
+        }
+        finally
+        {
+            _isUpdating = false;
+        }
+    }
+
+    private void SaveState()
+    {
+        if (!_isInitialized)
+            return;
+
+        Preferences.Default.Set(PrefSelectedDate, SelectedDate.Ticks);
+        Preferences.Default.Set(PrefFromCurrency, FromCurrency?.CharCode ?? "RUB");
+        Preferences.Default.Set(PrefToCurrency, ToCurrency?.CharCode ?? "USD");
+        Preferences.Default.Set(PrefFromAmount, FromAmount ?? "1");
     }
 
     private void ConvertFromSource()
