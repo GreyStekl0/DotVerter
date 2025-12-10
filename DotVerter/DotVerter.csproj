@@ -15,7 +15,7 @@
 		<ApplicationTitle>DotVerter</ApplicationTitle>
 
 		<!-- App Identifier -->
-		<ApplicationId>com.companyname.dotverter</ApplicationId>
+		<ApplicationId>io.github.stekl0.dotverter</ApplicationId>
 
 		<!-- Versions -->
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>

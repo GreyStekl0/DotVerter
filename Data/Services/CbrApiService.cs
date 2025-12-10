@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net.Http.Json;
 using Data.Dto;
 
@@ -22,24 +23,23 @@ internal class CbrApiService(HttpClient httpClient)
     /// </summary>
     public async Task<CbrResponseDto?> GetRatesByDateAsync(DateOnly date)
     {
-        System.Diagnostics.Debug.WriteLine($"[API] GetRatesByDateAsync called for date: {date:yyyy-MM-dd}");
-        
+        Debug.WriteLine($"[API] GetRatesByDateAsync called for date: {date:yyyy-MM-dd}");
+
         // ѕробуем получить курс, если нет Ч идЄм назад по датам
         for (var i = 0; i < MaxDaysBack; i++)
         {
             var targetDate = date.AddDays(-i);
-            System.Diagnostics.Debug.WriteLine($"[API] Trying date: {targetDate:yyyy-MM-dd} (offset: {i})");
-            
+            Debug.WriteLine($"[API] Trying date: {targetDate:yyyy-MM-dd} (offset: {i})");
+
             var response = await TryGetRatesForDateAsync(targetDate);
 
-            if (response != null)
-            {
-                System.Diagnostics.Debug.WriteLine($"[API] Success! Found {response.Valute?.Count ?? 0} currencies for {targetDate:yyyy-MM-dd}");
-                return response;
-            }
+            if (response == null) continue;
+            Debug.WriteLine(
+                $"[API] Success! Found {response.Valute.Count} currencies for {targetDate:yyyy-MM-dd}");
+            return response;
         }
 
-        System.Diagnostics.Debug.WriteLine($"[API] Failed to get rates for {date:yyyy-MM-dd} after {MaxDaysBack} attempts");
+        Debug.WriteLine($"[API] Failed to get rates for {date:yyyy-MM-dd} after {MaxDaysBack} attempts");
         return null;
     }
 
@@ -51,7 +51,7 @@ internal class CbrApiService(HttpClient httpClient)
         try
         {
             string url;
-            
+
             // ƒл€ сегодн€шней даты используем основной URL (может быть быстрее)
             if (date == DateOnly.FromDateTime(DateTime.Today))
             {
@@ -63,26 +63,26 @@ internal class CbrApiService(HttpClient httpClient)
                 url = string.Format(ArchiveUrlTemplate, dt.Year, dt.Month.ToString("D2"), dt.Day.ToString("D2"));
             }
 
-            System.Diagnostics.Debug.WriteLine($"[API] URL: {url}");
-            
+            Debug.WriteLine($"[API] URL: {url}");
+
             var response = await httpClient.GetAsync(url);
 
-            System.Diagnostics.Debug.WriteLine($"[API] HTTP Status: {response.StatusCode}");
-            
+            Debug.WriteLine($"[API] HTTP Status: {response.StatusCode}");
+
             if (!response.IsSuccessStatusCode)
                 return null;
 
             var content = await response.Content.ReadAsStringAsync();
-            System.Diagnostics.Debug.WriteLine($"[API] Content length: {content.Length} chars");
-            
+            Debug.WriteLine($"[API] Content length: {content.Length} chars");
+
             var dto = await response.Content.ReadFromJsonAsync<CbrResponseDto>();
-            System.Diagnostics.Debug.WriteLine($"[API] Deserialized: {dto?.Valute?.Count ?? 0} currencies");
-            
+            Debug.WriteLine($"[API] Deserialized: {dto?.Valute.Count ?? 0} currencies");
+
             return dto;
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[API] Exception: {ex.Message}");
+            Debug.WriteLine($"[API] Exception: {ex.Message}");
             return null;
         }
     }

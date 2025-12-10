@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -7,46 +8,31 @@ using UI.Models;
 
 namespace UI.ViewModels;
 
-public partial class CurrencyConverterViewModel : ObservableObject
+public partial class CurrencyConverterViewModel(ICurrencyRepository repository) : ObservableObject
 {
-    private readonly ICurrencyRepository _repository;
+    [ObservableProperty] private ObservableCollection<CurrencyItem> _currencies = [];
+
+    [ObservableProperty] private string _fromAmount = "1";
+
+    [ObservableProperty] private CurrencyItem? _fromCurrency;
+
+    [ObservableProperty] private bool _isLoading;
+
     private bool _isUpdating;
 
-    [ObservableProperty]
-    private DateTime _selectedDate = DateTime.Today;
+    [ObservableProperty] private DateTime _maxDate = DateTime.Today;
 
-    [ObservableProperty]
-    private DateTime _maxDate = DateTime.Today;
+    [ObservableProperty] private string _rateInfoText = string.Empty;
 
-    [ObservableProperty]
-    private string _rateInfoText = string.Empty;
+    [ObservableProperty] private DateTime _selectedDate = DateTime.Today;
 
-    [ObservableProperty]
-    private ObservableCollection<CurrencyItem> _currencies = [];
+    [ObservableProperty] private string _toAmount = string.Empty;
 
-    [ObservableProperty]
-    private CurrencyItem? _fromCurrency;
-
-    [ObservableProperty]
-    private CurrencyItem? _toCurrency;
-
-    [ObservableProperty]
-    private string _fromAmount = "1";
-
-    [ObservableProperty]
-    private string _toAmount = string.Empty;
-
-    [ObservableProperty]
-    private bool _isLoading;
-
-    public CurrencyConverterViewModel(ICurrencyRepository repository)
-    {
-        _repository = repository;
-    }
+    [ObservableProperty] private CurrencyItem? _toCurrency;
 
     partial void OnSelectedDateChanged(DateTime value)
     {
-        System.Diagnostics.Debug.WriteLine($"[VM] Date changed to: {value:yyyy-MM-dd}");
+        Debug.WriteLine($"[VM] Date changed to: {value:yyyy-MM-dd}");
         _ = LoadCurrenciesAsync();
     }
 
@@ -75,18 +61,19 @@ public partial class CurrencyConverterViewModel : ObservableObject
     [RelayCommand]
     private async Task LoadCurrenciesAsync()
     {
-        System.Diagnostics.Debug.WriteLine($"[VM] LoadCurrenciesAsync started");
+        Debug.WriteLine("[VM] LoadCurrenciesAsync started");
         IsLoading = true;
 
         try
         {
             var date = DateOnly.FromDateTime(SelectedDate);
-            System.Diagnostics.Debug.WriteLine($"[VM] Requesting data for: {date:yyyy-MM-dd}");
+            Debug.WriteLine($"[VM] Requesting data for: {date:yyyy-MM-dd}");
 
-            var result = await _repository.GetRatesByDateAsync(date);
+            var result = await repository.GetRatesByDateAsync(date);
 
-            System.Diagnostics.Debug.WriteLine($"[VM] Received {result.Currencies.Count()} currencies");
-            System.Diagnostics.Debug.WriteLine($"[VM] RequestedDate: {result.RequestedDate:yyyy-MM-dd}, ActualDate: {result.ActualDate:yyyy-MM-dd}");
+            Debug.WriteLine($"[VM] Received {result.Currencies.Count()} currencies");
+            Debug.WriteLine(
+                $"[VM] RequestedDate: {result.RequestedDate:yyyy-MM-dd}, ActualDate: {result.ActualDate:yyyy-MM-dd}");
 
             RateInfoText = $"Kurs na {result.ActualDate:d MMMM yyyy}";
 
@@ -112,16 +99,14 @@ public partial class CurrencyConverterViewModel : ObservableObject
                 Value = c.Value
             }));
 
-            System.Diagnostics.Debug.WriteLine($"[VM] Total items after adding RUB: {items.Count}");
+            Debug.WriteLine($"[VM] Total items after adding RUB: {items.Count}");
 
             foreach (var item in items.Take(5))
-            {
-                System.Diagnostics.Debug.WriteLine($"[VM] Currency: {item.CharCode} - {item.Name} ({item.Nominal} = {item.Value})");
-            }
+                Debug.WriteLine($"[VM] Currency: {item.CharCode} - {item.Name} ({item.Nominal} = {item.Value})");
 
             Currencies = new ObservableCollection<CurrencyItem>(items);
 
-            System.Diagnostics.Debug.WriteLine($"[VM] Currencies collection updated with {Currencies.Count} items");
+            Debug.WriteLine($"[VM] Currencies collection updated with {Currencies.Count} items");
 
             FromCurrency = Currencies.FirstOrDefault(c => c.CharCode == previousFromCode)
                            ?? Currencies.FirstOrDefault(c => c.CharCode == "RUB");
@@ -129,18 +114,18 @@ public partial class CurrencyConverterViewModel : ObservableObject
             ToCurrency = Currencies.FirstOrDefault(c => c.CharCode == previousToCode)
                          ?? Currencies.FirstOrDefault(c => c.CharCode == "USD");
 
-            System.Diagnostics.Debug.WriteLine($"[VM] FromCurrency: {FromCurrency?.CharCode}, ToCurrency: {ToCurrency?.CharCode}");
+            Debug.WriteLine($"[VM] FromCurrency: {FromCurrency?.CharCode}, ToCurrency: {ToCurrency?.CharCode}");
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"[VM] Exception: {ex.Message}");
-            System.Diagnostics.Debug.WriteLine($"[VM] StackTrace: {ex.StackTrace}");
+            Debug.WriteLine($"[VM] Exception: {ex.Message}");
+            Debug.WriteLine($"[VM] StackTrace: {ex.StackTrace}");
             RateInfoText = "Oshibka zagruzki kursov";
         }
         finally
         {
             IsLoading = false;
-            System.Diagnostics.Debug.WriteLine($"[VM] LoadCurrenciesAsync finished");
+            Debug.WriteLine("[VM] LoadCurrenciesAsync finished");
         }
     }
 
