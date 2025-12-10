@@ -3,70 +3,141 @@
     x:Class="UI.Views.CurrencyConverterPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:vm="clr-namespace:UI.ViewModels"
     xmlns:models="clr-namespace:UI.Models"
-    x:DataType="vm:CurrencyConverterViewModel"
-    Title="Konverter valyut">
+    xmlns:vm="clr-namespace:UI.ViewModels"
+    Title="Конвертер валют"
+    x:DataType="vm:CurrencyConverterViewModel">
 
-    <Grid Padding="16" RowDefinitions="Auto,Auto,Auto,*">
+    <ScrollView>
+        <Grid
+            Padding="20"
+            RowDefinitions="Auto,Auto,Auto,Auto"
+            RowSpacing="16">
 
-        <HorizontalStackLayout Grid.Row="0" Spacing="10" HorizontalOptions="Center">
-            <Label Text="Data" VerticalOptions="Center" />
-            <DatePicker Date="{Binding SelectedDate}" MaximumDate="{Binding MaxDate}" />
-        </HorizontalStackLayout>
+            <!--  Секция выбора даты  -->
+            <Border
+                Grid.Row="0"
+                Padding="16"
+                BackgroundColor="{AppThemeBinding Light={StaticResource White},
+                                                  Dark={StaticResource Gray900}}"
+                Stroke="{AppThemeBinding Light={StaticResource Gray200},
+                                         Dark={StaticResource Gray600}}"
+                StrokeShape="RoundRectangle 12">
+                <Border.Shadow>
+                    <Shadow
+                        Brush="{StaticResource Gray300}"
+                        Opacity="0.3"
+                        Radius="4"
+                        Offset="0,2" />
+                </Border.Shadow>
+                <VerticalStackLayout Spacing="8">
+                    <Label
+                        FontAttributes="Bold"
+                        FontSize="14"
+                        Text="📅 Выберите дату" />
+                    <DatePicker
+                        Date="{Binding SelectedDate}"
+                        HorizontalOptions="Fill"
+                        MaximumDate="{Binding MaxDate}" />
+                    <Label
+                        FontSize="12"
+                        HorizontalOptions="Center"
+                        Opacity="0.7"
+                        Text="{Binding RateInfoText}" />
+                </VerticalStackLayout>
+            </Border>
 
-        <Label
-            Grid.Row="1"
-            Text="{Binding RateInfoText}"
-            HorizontalOptions="Center"
-            Margin="0,8"
-            FontSize="12"
-            TextColor="Gray" />
+            <!--  Индикатор загрузки  -->
+            <ActivityIndicator
+                Grid.Row="1"
+                HeightRequest="40"
+                HorizontalOptions="Center"
+                IsRunning="{Binding IsLoading}"
+                IsVisible="{Binding IsLoading}" />
 
-        <ActivityIndicator
-            Grid.Row="2"
-            IsRunning="{Binding IsLoading}"
-            IsVisible="{Binding IsLoading}"
-            HorizontalOptions="Center" />
+            <!--  Секция конвертации  -->
+            <VerticalStackLayout Grid.Row="2" Spacing="12">
 
-        <VerticalStackLayout Grid.Row="3" Spacing="16">
+                <!--  Исходная валюта  -->
+                <Border
+                    Padding="16"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource White},
+                                                      Dark={StaticResource Gray900}}"
+                    Stroke="{AppThemeBinding Light={StaticResource Gray200},
+                                             Dark={StaticResource Gray600}}"
+                    StrokeShape="RoundRectangle 12">
+                    <Border.Shadow>
+                        <Shadow
+                            Brush="{StaticResource Gray300}"
+                            Opacity="0.3"
+                            Radius="4"
+                            Offset="0,2" />
+                    </Border.Shadow>
+                    <VerticalStackLayout Spacing="12">
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="14"
+                            Text="💰 Из валюты" />
+                        <Picker
+                            Title="Выберите валюту"
+                            HorizontalOptions="Fill"
+                            ItemDisplayBinding="{Binding DisplayName}"
+                            ItemsSource="{Binding Currencies}"
+                            SelectedItem="{Binding FromCurrency}" />
+                        <Entry
+                            FontSize="18"
+                            HorizontalTextAlignment="End"
+                            Keyboard="Numeric"
+                            Placeholder="Введите сумму"
+                            Text="{Binding FromAmount}" />
+                    </VerticalStackLayout>
+                </Border>
 
-            <Frame Padding="12" BorderColor="LightGray" CornerRadius="8">
-                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                    <Picker
-                        Grid.Column="0"
-                        Title="Valyuta"
-                        ItemsSource="{Binding Currencies}"
-                        SelectedItem="{Binding FromCurrency}"
-                        ItemDisplayBinding="{Binding DisplayName}" />
-                    <Entry
-                        Grid.Column="1"
-                        Text="{Binding FromAmount}"
-                        Keyboard="Numeric"
-                        Placeholder="Summa"
-                        HorizontalTextAlignment="End" />
-                </Grid>
-            </Frame>
+                <!--  Иконка обмена  -->
+                <Label
+                    FontSize="28"
+                    HorizontalOptions="Center"
+                    Opacity="0.6"
+                    Text="⇅" />
 
-            <Frame Padding="12" BorderColor="LightGray" CornerRadius="8">
-                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                    <Picker
-                        Grid.Column="0"
-                        Title="Valyuta"
-                        ItemsSource="{Binding Currencies}"
-                        SelectedItem="{Binding ToCurrency}"
-                        ItemDisplayBinding="{Binding DisplayName}" />
-                    <Entry
-                        Grid.Column="1"
-                        Text="{Binding ToAmount}"
-                        Keyboard="Numeric"
-                        Placeholder="Summa"
-                        HorizontalTextAlignment="End" />
-                </Grid>
-            </Frame>
+                <!--  Целевая валюта  -->
+                <Border
+                    Padding="16"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource White},
+                                                      Dark={StaticResource Gray900}}"
+                    Stroke="{AppThemeBinding Light={StaticResource Gray200},
+                                             Dark={StaticResource Gray600}}"
+                    StrokeShape="RoundRectangle 12">
+                    <Border.Shadow>
+                        <Shadow
+                            Brush="{StaticResource Gray300}"
+                            Opacity="0.3"
+                            Radius="4"
+                            Offset="0,2" />
+                    </Border.Shadow>
+                    <VerticalStackLayout Spacing="12">
+                        <Label
+                            FontAttributes="Bold"
+                            FontSize="14"
+                            Text="💱 В валюту" />
+                        <Picker
+                            Title="Выберите валюту"
+                            HorizontalOptions="Fill"
+                            ItemDisplayBinding="{Binding DisplayName}"
+                            ItemsSource="{Binding Currencies}"
+                            SelectedItem="{Binding ToCurrency}" />
+                        <Entry
+                            FontSize="18"
+                            HorizontalTextAlignment="End"
+                            Keyboard="Numeric"
+                            Placeholder="Результат"
+                            Text="{Binding ToAmount}" />
+                    </VerticalStackLayout>
+                </Border>
 
-        </VerticalStackLayout>
+            </VerticalStackLayout>
 
-    </Grid>
+        </Grid>
+    </ScrollView>
 
 </ContentPage>

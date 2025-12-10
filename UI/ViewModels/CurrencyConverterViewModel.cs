@@ -75,7 +75,7 @@ public partial class CurrencyConverterViewModel(ICurrencyRepository repository) 
             Debug.WriteLine(
                 $"[VM] RequestedDate: {result.RequestedDate:yyyy-MM-dd}, ActualDate: {result.ActualDate:yyyy-MM-dd}");
 
-            RateInfoText = $"Kurs na {result.ActualDate:d MMMM yyyy}";
+            RateInfoText = $"Курс на {result.ActualDate:d MMMM yyyy}";
 
             var previousFromCode = FromCurrency?.CharCode;
             var previousToCode = ToCurrency?.CharCode;
@@ -85,7 +85,7 @@ public partial class CurrencyConverterViewModel(ICurrencyRepository repository) 
                 new()
                 {
                     CharCode = "RUB",
-                    Name = "Rossiyskiy rubl",
+                    Name = "Российский рубль",
                     Nominal = 1,
                     Value = 1
                 }
