@@ -6,7 +6,7 @@ namespace Data.Database.Entities;
 ///     Сущность валюты для хранения в SQLite
 /// </summary>
 [Table("Currencies")]
-internal class CurrencyEntity
+public class CurrencyEntity
 {
     /// <summary>
     ///     Первичный ключ (автоинкремент)

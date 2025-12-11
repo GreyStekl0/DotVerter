@@ -11,16 +11,13 @@ namespace Data.Repositories;
 ///     Репозиторий для работы с курсами валют.
 ///     Кэширует данные в локальной БД, при необходимости загружает из сети.
 /// </summary>
-public class CurrencyRepository(string dbPath) : ICurrencyRepository
+public class CurrencyRepository(ICbrApiService apiService, CurrencyDbContext dbContext) : ICurrencyRepository
 {
-    private readonly CbrApiService _apiService = new();
-    private readonly CurrencyDbContext _dbContext = new(dbPath);
-
     /// <inheritdoc />
-    public async Task<CurrencyRatesResult> GetTodayRatesAsync()
+    public Task<CurrencyRatesResult> GetTodayRatesAsync()
     {
-        // Используем московское время для "сегодня", так как API ЦБ работает по МСК
-        return await GetRatesByDateAsync(CbrApiService.GetMoscowToday());
+        // Используем локальную дату пользователя
+        return GetRatesByDateAsync(DateOnly.FromDateTime(DateTime.Today));
     }
 
     /// <inheritdoc />
@@ -29,10 +26,9 @@ public class CurrencyRepository(string dbPath) : ICurrencyRepository
         var requestedDateTime = date.ToDateTime(TimeOnly.MinValue);
 
         // Проверяем наличие данных в БД
-        if (await _dbContext.HasDataForRequestedDateAsync(requestedDateTime))
+        if (await dbContext.HasDataForRequestedDateAsync(requestedDateTime))
         {
-            // Данные есть в БД — возвращаем их
-            var entities = await _dbContext.GetCurrenciesByRequestedDateAsync(requestedDateTime);
+            var entities = await dbContext.GetCurrenciesByRequestedDateAsync(requestedDateTime);
             var actualDate = entities.FirstOrDefault()?.ActualDate ?? requestedDateTime;
 
             return new CurrencyRatesResult
@@ -43,16 +39,12 @@ public class CurrencyRepository(string dbPath) : ICurrencyRepository
             };
         }
 
-        // Данных нет — загружаем из сети и сохраняем в БД
         return await FetchAndSaveRatesAsync(date);
     }
 
-    /// <summary>
-    ///     Загружает курсы из сети и сохраняет в БД
-    /// </summary>
     private async Task<CurrencyRatesResult> FetchAndSaveRatesAsync(DateOnly requestedDate)
     {
-        var response = await _apiService.GetRatesByDateAsync(requestedDate);
+        var response = await apiService.GetRatesByDateAsync(requestedDate);
 
         if (response?.Valute == null || response.Valute.Count == 0)
         {
@@ -65,19 +57,15 @@ public class CurrencyRepository(string dbPath) : ICurrencyRepository
         }
 
         var dtos = response.Valute.Values;
-        
-        // Используем дату из запроса архива, а не из ответа API
-        // Это решает проблему с часовыми поясами
+
         var actualDate = response.RequestedArchiveDate ?? requestedDate;
         var requestedDateTime = requestedDate.ToDateTime(TimeOnly.MinValue);
         var actualDateTime = actualDate.ToDateTime(TimeOnly.MinValue);
 
-        // Сохраняем в БД с привязкой к датам
         var entities = dtos.ToEntities(requestedDateTime, actualDateTime);
         var currencyEntities = entities as CurrencyEntity[] ?? entities.ToArray();
-        await _dbContext.SaveCurrenciesAsync(currencyEntities);
+        await dbContext.SaveCurrenciesAsync(currencyEntities);
 
-        // Возвращаем результат с информацией о датах
         return new CurrencyRatesResult
         {
             RequestedDate = requestedDate,

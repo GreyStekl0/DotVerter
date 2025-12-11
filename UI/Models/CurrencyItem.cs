@@ -11,7 +11,7 @@ public class CurrencyItem
     public decimal Value { get; set; }
 
     /// <summary>
-    ///     Отображаемое название в Picker
+    ///     Отображаемое значение в Picker
     /// </summary>
     public string DisplayName => $"{Name} ({CharCode})";
 

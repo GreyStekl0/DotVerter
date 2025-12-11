@@ -6,10 +6,15 @@ namespace Data.Database;
 /// <summary>
 ///      онтекст базы данных SQLite дл€ хранени€ курсов валют
 /// </summary>
-internal class CurrencyDbContext(string dbPath)
+public class CurrencyDbContext
 {
-    private readonly SQLiteAsyncConnection _database = new(dbPath);
+    private readonly SQLiteAsyncConnection _database;
     private bool _initialized;
+
+    public CurrencyDbContext(string dbPath)
+    {
+        _database = new SQLiteAsyncConnection(dbPath);
+    }
 
     /// <summary>
     ///     »нициализаци€ базы данных (создание таблиц)
@@ -37,7 +42,7 @@ internal class CurrencyDbContext(string dbPath)
     }
 
     /// <summary>
-    ///     ѕроверить, есть ли данные дл€ запрошенной даты
+    ///     ѕровер€ет, есть ли данные дл€ запрошенной даты
     /// </summary>
     public async Task<bool> HasDataForRequestedDateAsync(DateTime requestedDate)
     {

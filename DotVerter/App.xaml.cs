@@ -4,17 +4,17 @@ namespace DotVerter;
 
 public partial class App
 {
+    private readonly IServiceProvider _serviceProvider;
+
     public App(IServiceProvider serviceProvider)
     {
         InitializeComponent();
-        ServiceProvider = serviceProvider;
+        _serviceProvider = serviceProvider;
     }
-
-    public static IServiceProvider ServiceProvider { get; private set; } = null!;
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        var page = ServiceProvider.GetRequiredService<CurrencyConverterPage>();
+        var page = _serviceProvider.GetRequiredService<CurrencyConverterPage>();
         return new Window(new NavigationPage(page));
     }
 }

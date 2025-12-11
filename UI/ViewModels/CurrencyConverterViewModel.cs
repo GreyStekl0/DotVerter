@@ -38,7 +38,7 @@ public partial class CurrencyConverterViewModel(ICurrencyRepository repository) 
     partial void OnSelectedDateChanged(DateTime value)
     {
         SaveState();
-        _ = LoadCurrenciesAsync();
+        LoadCurrenciesCommand.Execute(null);
     }
 
     partial void OnFromCurrencyChanged(CurrencyItem? value)
@@ -69,7 +69,7 @@ public partial class CurrencyConverterViewModel(ICurrencyRepository repository) 
     }
 
     [RelayCommand]
-    private async Task LoadCurrenciesAsync()
+    private async Task LoadCurrenciesAsync(CancellationToken cancellationToken = default)
     {
         IsLoading = true;
 
@@ -79,12 +79,15 @@ public partial class CurrencyConverterViewModel(ICurrencyRepository repository) 
 
             var result = await repository.GetRatesByDateAsync(date);
 
+            if (cancellationToken.IsCancellationRequested)
+                return;
+
             RateInfoText = $"Курс на {result.ActualDate:d MMMM yyyy}";
 
             var previousFromCode = FromCurrency?.CharCode;
             var previousToCode = ToCurrency?.CharCode;
 
-            // При первой загрузке используем сохранённые значения
+            // При первой загрузке восстанавливаем сохранённые значения
             if (!_isInitialized)
             {
                 previousFromCode = Preferences.Default.Get(PrefFromCurrency, "RUB");
@@ -120,9 +123,13 @@ public partial class CurrencyConverterViewModel(ICurrencyRepository repository) 
 
             _isInitialized = true;
         }
+        catch (OperationCanceledException)
+        {
+            // Загрузка была отменена - игнорируем
+        }
         catch (Exception)
         {
-            RateInfoText = "Ошибка загрузки курсов";
+            RateInfoText = "Ошибка загрузки данных";
         }
         finally
         {
@@ -140,10 +147,10 @@ public partial class CurrencyConverterViewModel(ICurrencyRepository repository) 
         {
             var savedDateTicks = Preferences.Default.Get(PrefSelectedDate, DateTime.Today.Ticks);
             var savedDate = new DateTime(savedDateTicks);
-            
-            // Убеждаемся, что дата не больше максимальной
+
+            // Гарантируем, что дата не больше максимальной
             SelectedDate = savedDate <= MaxDate ? savedDate : MaxDate;
-            
+
             FromAmount = Preferences.Default.Get(PrefFromAmount, "1");
         }
         finally

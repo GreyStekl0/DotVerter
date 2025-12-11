@@ -1,5 +1,4 @@
-﻿using Data.Repositories;
-using Domain.Repositories;
+﻿using Data;
 using UI;
 
 namespace DotVerter;
@@ -17,11 +16,13 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
-        // Регистрация сервисов
+        // Путь к базе данных
         var dbPath = Path.Combine(FileSystem.AppDataDirectory, "currencies.db");
-        builder.Services.AddSingleton<ICurrencyRepository>(new CurrencyRepository(dbPath));
 
-        // UI сервисы
+        // Регистрация сервисов Data слоя (включая HttpClient и репозиторий)
+        builder.Services.AddDataServices(dbPath);
+
+        // Регистрация сервисов UI слоя
         builder.Services.AddUIServices();
 
         return builder.Build();
