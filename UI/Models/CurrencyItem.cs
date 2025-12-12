@@ -1,7 +1,7 @@
 namespace UI.Models;
 
 /// <summary>
-///     Модель валюты для отображения в UI
+///     РњРѕРґРµР»СЊ РІР°Р»СЋС‚С‹ РґР»СЏ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ РІ UI
 /// </summary>
 public class CurrencyItem
 {
@@ -11,12 +11,12 @@ public class CurrencyItem
     public decimal Value { get; set; }
 
     /// <summary>
-    ///     Отображаемое значение в Picker
+    ///     РћС‚РѕР±СЂР°Р¶Р°РµРјРѕРµ Р·РЅР°С‡РµРЅРёРµ РІ Picker
     /// </summary>
     public string DisplayName => $"{Name} ({CharCode})";
 
     /// <summary>
-    ///     Курс за 1 единицу валюты
+    ///     РљСѓСЂСЃ Р·Р° 1 РµРґРёРЅРёС†Сѓ РІР°Р»СЋС‚С‹
     /// </summary>
     public decimal RatePerUnit => Value / Nominal;
 }

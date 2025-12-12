@@ -37,6 +37,9 @@ public partial class CurrencyConverterViewModel(ICurrencyRepository repository) 
 
     partial void OnSelectedDateChanged(DateTime value)
     {
+        if (_isUpdating)
+            return;
+
         SaveState();
         LoadCurrenciesCommand.Execute(null);
     }
@@ -82,12 +85,12 @@ public partial class CurrencyConverterViewModel(ICurrencyRepository repository) 
             if (cancellationToken.IsCancellationRequested)
                 return;
 
-            RateInfoText = $"Курс на {result.ActualDate:d MMMM yyyy}";
+            RateInfoText = $"РљСѓСЂСЃ РЅР° {result.ActualDate:d MMMM yyyy}";
 
             var previousFromCode = FromCurrency?.CharCode;
             var previousToCode = ToCurrency?.CharCode;
 
-            // При первой загрузке восстанавливаем сохранённые значения
+            // РџСЂРё РїРµСЂРІРѕР№ Р·Р°РіСЂСѓР·РєРµ РІРѕСЃСЃС‚Р°РЅР°РІР»РёРІР°РµРј СЃРѕС…СЂР°РЅС‘РЅРЅС‹Рµ Р·РЅР°С‡РµРЅРёСЏ
             if (!_isInitialized)
             {
                 previousFromCode = Preferences.Default.Get(PrefFromCurrency, "RUB");
@@ -99,7 +102,7 @@ public partial class CurrencyConverterViewModel(ICurrencyRepository repository) 
                 new()
                 {
                     CharCode = "RUB",
-                    Name = "Российский рубль",
+                    Name = "Р РѕСЃСЃРёР№СЃРєРёР№ СЂСѓР±Р»СЊ",
                     Nominal = 1,
                     Value = 1
                 }
@@ -125,11 +128,11 @@ public partial class CurrencyConverterViewModel(ICurrencyRepository repository) 
         }
         catch (OperationCanceledException)
         {
-            // Загрузка была отменена - игнорируем
+            // Р—Р°РіСЂСѓР·РєР° Р±С‹Р»Р° РѕС‚РјРµРЅРµРЅР° - РёРіРЅРѕСЂРёСЂСѓРµРј
         }
         catch (Exception)
         {
-            RateInfoText = "Ошибка загрузки данных";
+            RateInfoText = "РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РґР°РЅРЅС‹С…";
         }
         finally
         {
@@ -138,7 +141,7 @@ public partial class CurrencyConverterViewModel(ICurrencyRepository repository) 
     }
 
     /// <summary>
-    /// Загружает сохранённое состояние из Preferences
+    /// Р—Р°РіСЂСѓР¶Р°РµС‚ СЃРѕС…СЂР°РЅС‘РЅРЅРѕРµ СЃРѕСЃС‚РѕСЏРЅРёРµ РёР· Preferences
     /// </summary>
     public void RestoreState()
     {
@@ -148,7 +151,7 @@ public partial class CurrencyConverterViewModel(ICurrencyRepository repository) 
             var savedDateTicks = Preferences.Default.Get(PrefSelectedDate, DateTime.Today.Ticks);
             var savedDate = new DateTime(savedDateTicks);
 
-            // Гарантируем, что дата не больше максимальной
+            // Р“Р°СЂР°РЅС‚РёСЂСѓРµРј, С‡С‚Рѕ РґР°С‚Р° РЅРµ Р±РѕР»СЊС€Рµ РјР°РєСЃРёРјР°Р»СЊРЅРѕР№
             SelectedDate = savedDate <= MaxDate ? savedDate : MaxDate;
 
             FromAmount = Preferences.Default.Get(PrefFromAmount, "1");

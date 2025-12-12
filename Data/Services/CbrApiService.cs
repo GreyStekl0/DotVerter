@@ -1,11 +1,11 @@
 using System.Diagnostics;
-using System.Net.Http.Json;
+using System.Text.Json;
 using Data.Dto;
 
 namespace Data.Services;
 
 /// <summary>
-///     Сервис для работы с API ЦБ РФ (cbr-xml-daily.ru)
+///     РЎРµСЂРІРёСЃ РґР»СЏ СЂР°Р±РѕС‚С‹ СЃ API Р¦Р‘ Р Р¤ (cbr-xml-daily.ru)
 /// </summary>
 public class CbrApiService(HttpClient httpClient) : ICbrApiService
 {
@@ -17,13 +17,13 @@ public class CbrApiService(HttpClient httpClient) : ICbrApiService
     {
         Debug.WriteLine($"[API] GetRatesByDateAsync called for date: {date:yyyy-MM-dd}");
 
-        // Пробуем несколько дат назад, если на запрошенную нет данных (выходные/праздники)
+        // РџСЂРѕР±СѓРµРј РЅРµСЃРєРѕР»СЊРєРѕ РґР°С‚ РЅР°Р·Р°Рґ, РµСЃР»Рё РЅР° Р·Р°РїСЂРѕС€РµРЅРЅСѓСЋ РЅРµС‚ РґР°РЅРЅС‹С… (РІС‹С…РѕРґРЅС‹Рµ/РїСЂР°Р·РґРЅРёРєРё)
         for (var i = 0; i < MaxDaysBack; i++)
         {
             var targetDate = date.AddDays(-i);
             Debug.WriteLine($"[API] Trying date: {targetDate:yyyy-MM-dd} (offset: {i})");
 
-            var response = await TryGetRatesForDateAsync(targetDate);
+            var response = await TryGetRatesForDateAsync(targetDate).ConfigureAwait(false);
 
             if (response == null) continue;
 
@@ -42,19 +42,23 @@ public class CbrApiService(HttpClient httpClient) : ICbrApiService
     {
         try
         {
-            var dt = date.ToDateTime(TimeOnly.MinValue);
-            var url = string.Format(ArchiveUrlTemplate, dt.Year, dt.Month.ToString("D2"), dt.Day.ToString("D2"));
+            var url = string.Format(ArchiveUrlTemplate, date.Year, date.Month.ToString("D2"), date.Day.ToString("D2"));
 
             Debug.WriteLine($"[API] URL: {url}");
 
-            var response = await httpClient.GetAsync(url);
+            using var response = await httpClient
+                .GetAsync(url, HttpCompletionOption.ResponseHeadersRead)
+                .ConfigureAwait(false);
 
             Debug.WriteLine($"[API] HTTP Status: {response.StatusCode}");
 
             if (!response.IsSuccessStatusCode)
                 return null;
 
-            var dto = await response.Content.ReadFromJsonAsync<CbrResponseDto>();
+            await using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+            var dto = await JsonSerializer
+                .DeserializeAsync(stream, CbrJsonContext.Default.CbrResponseDto)
+                .ConfigureAwait(false);
             Debug.WriteLine($"[API] Deserialized: {dto?.Valute.Count ?? 0} currencies");
 
             return dto;

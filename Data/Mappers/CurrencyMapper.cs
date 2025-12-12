@@ -5,7 +5,7 @@ using Domain.Models;
 namespace Data.Mappers;
 
 /// <summary>
-///     Маппер между DTO, Entity и Domain моделями
+///     РњР°РїРїРµСЂ РјРµР¶РґСѓ DTO, Entity Рё Domain РјРѕРґРµР»СЏРјРё
 /// </summary>
 internal static class CurrencyMapper
 {
@@ -24,7 +24,7 @@ internal static class CurrencyMapper
     }
 
     /// <summary>
-    ///     Коллекция Entity -> Domain Models
+    ///     РљРѕР»Р»РµРєС†РёСЏ Entity -> Domain Models
     /// </summary>
     public static IEnumerable<Currency> ToModels(this IEnumerable<CurrencyEntity> entities)
     {
@@ -67,7 +67,7 @@ internal static class CurrencyMapper
     extension(IEnumerable<CurrencyDto> dtos)
     {
         /// <summary>
-        ///     Коллекция DTO -> Entities
+        ///     РљРѕР»Р»РµРєС†РёСЏ DTO -> Entities
         /// </summary>
         public IEnumerable<CurrencyEntity> ToEntities(DateTime requestedDate,
             DateTime actualDate)
@@ -76,7 +76,7 @@ internal static class CurrencyMapper
         }
 
         /// <summary>
-        ///     Коллекция DTO -> Domain Models
+        ///     РљРѕР»Р»РµРєС†РёСЏ DTO -> Domain Models
         /// </summary>
         public IEnumerable<Currency> ToModels()
         {

@@ -3,47 +3,47 @@ using SQLite;
 namespace Data.Database.Entities;
 
 /// <summary>
-///     Сущность валюты для хранения в SQLite
+///     РЎСѓС‰РЅРѕСЃС‚СЊ РІР°Р»СЋС‚С‹ РґР»СЏ С…СЂР°РЅРµРЅРёСЏ РІ SQLite
 /// </summary>
 [Table("Currencies")]
 public class CurrencyEntity
 {
     /// <summary>
-    ///     Первичный ключ (автоинкремент)
+    ///     РџРµСЂРІРёС‡РЅС‹Р№ РєР»СЋС‡ (Р°РІС‚РѕРёРЅРєСЂРµРјРµРЅС‚)
     /// </summary>
     [PrimaryKey]
     [AutoIncrement]
     public int Id { get; set; }
 
     /// <summary>
-    ///     Буквенный код валюты (например, USD)
+    ///     Р‘СѓРєРІРµРЅРЅС‹Р№ РєРѕРґ РІР°Р»СЋС‚С‹ (РЅР°РїСЂРёРјРµСЂ, USD)
     /// </summary>
     [Indexed]
     public string CharCode { get; set; } = string.Empty;
 
     /// <summary>
-    ///     Номинал валюты
+    ///     РќРѕРјРёРЅР°Р» РІР°Р»СЋС‚С‹
     /// </summary>
     public int Nominal { get; set; }
 
     /// <summary>
-    ///     Название валюты
+    ///     РќР°Р·РІР°РЅРёРµ РІР°Р»СЋС‚С‹
     /// </summary>
     public string Name { get; set; } = string.Empty;
 
     /// <summary>
-    ///     Курс валюты
+    ///     РљСѓСЂСЃ РІР°Р»СЋС‚С‹
     /// </summary>
     public decimal Value { get; set; }
 
     /// <summary>
-    ///     Запрошенная дата (для кэширования)
+    ///     Р—Р°РїСЂРѕС€РµРЅРЅР°СЏ РґР°С‚Р° (РґР»СЏ РєСЌС€РёСЂРѕРІР°РЅРёСЏ)
     /// </summary>
     [Indexed]
     public DateTime RequestedDate { get; set; }
 
     /// <summary>
-    ///     Реальная дата курса от ЦБ
+    ///     Р РµР°Р»СЊРЅР°СЏ РґР°С‚Р° РєСѓСЂСЃР° РѕС‚ Р¦Р‘
     /// </summary>
     public DateTime ActualDate { get; set; }
 }

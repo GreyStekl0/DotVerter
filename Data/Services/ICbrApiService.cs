@@ -3,12 +3,12 @@ using Data.Dto;
 namespace Data.Services;
 
 /// <summary>
-///     Интерфейс для работы с API ЦБ РФ
+///     РРЅС‚РµСЂС„РµР№СЃ РґР»СЏ СЂР°Р±РѕС‚С‹ СЃ API Р¦Р‘ Р Р¤
 /// </summary>
 public interface ICbrApiService
 {
     /// <summary>
-    ///     Получить курсы валют на указанную дату
+    ///     РџРѕР»СѓС‡РёС‚СЊ РєСѓСЂСЃС‹ РІР°Р»СЋС‚ РЅР° СѓРєР°Р·Р°РЅРЅСѓСЋ РґР°С‚Сѓ
     /// </summary>
     Task<CbrResponseDto?> GetRatesByDateAsync(DateOnly date);
 }

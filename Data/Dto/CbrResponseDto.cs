@@ -1,7 +1,7 @@
 namespace Data.Dto;
 
 /// <summary>
-///     DTO ответа от API ЦБ РФ
+///     DTO РѕС‚РІРµС‚Р° РѕС‚ API Р¦Р‘ Р Р¤
 /// </summary>
 public class CbrResponseDto
 {
@@ -12,13 +12,13 @@ public class CbrResponseDto
     public Dictionary<string, CurrencyDto> Valute { get; set; } = new();
     
     /// <summary>
-    ///     Дата из URL архивного запроса (для корректной работы с часовыми поясами)
+    ///     Р”Р°С‚Р° РёР· URL Р°СЂС…РёРІРЅРѕРіРѕ Р·Р°РїСЂРѕСЃР° (РґР»СЏ РєРѕСЂСЂРµРєС‚РЅРѕР№ СЂР°Р±РѕС‚С‹ СЃ С‡Р°СЃРѕРІС‹РјРё РїРѕСЏСЃР°РјРё)
     /// </summary>
     public DateOnly? RequestedArchiveDate { get; set; }
 }
 
 /// <summary>
-///     DTO валюты от API ЦБ РФ
+///     DTO РІР°Р»СЋС‚С‹ РѕС‚ API Р¦Р‘ Р Р¤
 /// </summary>
 public class CurrencyDto
 {

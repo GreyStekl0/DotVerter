@@ -1,27 +1,27 @@
 namespace Domain.Models;
 
 /// <summary>
-///     Модель валюты для отображения в UI
+///     РњРѕРґРµР»СЊ РІР°Р»СЋС‚С‹ РґР»СЏ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ РІ UI
 /// </summary>
 public class Currency
 {
     /// <summary>
-    ///     Буквенный код валюты (например, USD)
+    ///     Р‘СѓРєРІРµРЅРЅС‹Р№ РєРѕРґ РІР°Р»СЋС‚С‹ (РЅР°РїСЂРёРјРµСЂ, USD)
     /// </summary>
     public string CharCode { get; set; } = string.Empty;
 
     /// <summary>
-    ///     Номинал валюты
+    ///     РќРѕРјРёРЅР°Р» РІР°Р»СЋС‚С‹
     /// </summary>
     public int Nominal { get; set; }
 
     /// <summary>
-    ///     Название валюты
+    ///     РќР°Р·РІР°РЅРёРµ РІР°Р»СЋС‚С‹
     /// </summary>
     public string Name { get; set; } = string.Empty;
 
     /// <summary>
-    ///     Курс валюты
+    ///     РљСѓСЂСЃ РІР°Р»СЋС‚С‹
     /// </summary>
     public decimal Value { get; set; }
 }
