@@ -6,31 +6,24 @@ namespace Data.Database;
 /// <summary>
 ///     Контекст базы данных SQLite для хранения курсов валют
 /// </summary>
-public class CurrencyDbContext
+public class CurrencyDbContext(string dbPath)
 {
-    private readonly SQLiteAsyncConnection _database;
+    private readonly SQLiteAsyncConnection _database = new(dbPath);
     private readonly SemaphoreSlim _initializeLock = new(1, 1);
     private bool _initialized;
-
-    public CurrencyDbContext(string dbPath)
-    {
-        _database = new SQLiteAsyncConnection(dbPath);
-    }
 
     /// <summary>
     ///     Инициализация базы данных (создание таблиц)
     /// </summary>
-    public async Task InitializeAsync()
+    public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
         if (_initialized)
             return;
 
-        await _initializeLock.WaitAsync().ConfigureAwait(false);
+        await _initializeLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            if (_initialized)
-                return;
-
+            cancellationToken.ThrowIfCancellationRequested();
             await _database.CreateTableAsync<CurrencyEntity>().ConfigureAwait(false);
             _initialized = true;
         }
@@ -43,9 +36,11 @@ public class CurrencyDbContext
     /// <summary>
     ///     Получить все курсы по запрошенной дате
     /// </summary>
-    public async Task<List<CurrencyEntity>> GetCurrenciesByRequestedDateAsync(DateTime requestedDate)
+    public async Task<List<CurrencyEntity>> GetCurrenciesByRequestedDateAsync(DateTime requestedDate,
+        CancellationToken cancellationToken = default)
     {
-        await InitializeAsync().ConfigureAwait(false);
+        await InitializeAsync(cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
 
         var dateOnly = requestedDate.Date;
         return await _database
@@ -56,28 +51,14 @@ public class CurrencyDbContext
     }
 
     /// <summary>
-    ///     Проверяет, есть ли данные для запрошенной даты
+    ///     Сохранить курсы валют для запрошенной даты
     /// </summary>
-    public async Task<bool> HasDataForRequestedDateAsync(DateTime requestedDate)
+    public async Task SaveCurrenciesAsync(IEnumerable<CurrencyEntity> currencies,
+        CancellationToken cancellationToken = default)
     {
-        await InitializeAsync().ConfigureAwait(false);
+        await InitializeAsync(cancellationToken).ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
 
-        var dateOnly = requestedDate.Date;
-        var count = await _database
-            .Table<CurrencyEntity>()
-            .Where(c => c.RequestedDate == dateOnly)
-            .CountAsync()
-            .ConfigureAwait(false);
-
-        return count > 0;
-    }
-
-    /// <summary>
-    ///     Сохранить курсы валют
-    /// </summary>
-    public async Task SaveCurrenciesAsync(IEnumerable<CurrencyEntity> currencies)
-    {
-        await InitializeAsync().ConfigureAwait(false);
         await _database.InsertAllAsync(currencies).ConfigureAwait(false);
     }
 }

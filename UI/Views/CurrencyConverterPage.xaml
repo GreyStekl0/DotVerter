@@ -3,7 +3,6 @@
     x:Class="UI.Views.CurrencyConverterPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:models="clr-namespace:UI.Models"
     xmlns:vm="clr-namespace:UI.ViewModels"
     Title="Конвертер валют"
     x:DataType="vm:CurrencyConverterViewModel">
@@ -98,7 +97,11 @@
                     FontSize="28"
                     HorizontalOptions="Center"
                     Opacity="0.6"
-                    Text="⇅" />
+                    Text="⇅">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding SwapCurrenciesCommand}" />
+                    </Label.GestureRecognizers>
+                </Label>
 
                 <!--  Целевая валюта  -->
                 <Border

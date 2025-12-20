@@ -10,5 +10,5 @@ public interface ICbrApiService
     /// <summary>
     ///     Получить курсы валют на указанную дату
     /// </summary>
-    Task<CbrResponseDto?> GetRatesByDateAsync(DateOnly date);
+    Task<CbrResponseDto?> GetRatesByDateAsync(DateOnly date, CancellationToken cancellationToken = default);
 }

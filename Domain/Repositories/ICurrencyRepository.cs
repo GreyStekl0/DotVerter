@@ -9,14 +9,9 @@ namespace Domain.Repositories;
 public interface ICurrencyRepository
 {
     /// <summary>
-    ///     Получить актуальные курсы валют на сегодня
-    /// </summary>
-    Task<CurrencyRatesResult> GetTodayRatesAsync();
-
-    /// <summary>
     ///     Получить курсы валют на указанную дату.
     ///     Если на указанную дату курс не установлен, возвращает ближайший предыдущий курс.
     /// </summary>
     /// <param name="date">Дата для получения курсов</param>
-    Task<CurrencyRatesResult> GetRatesByDateAsync(DateOnly date);
+    Task<CurrencyRatesResult> GetRatesByDateAsync(DateOnly date, CancellationToken cancellationToken = default);
 }

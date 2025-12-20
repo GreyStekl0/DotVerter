@@ -13,27 +13,38 @@ public partial class CurrencyConverterViewModel(ICurrencyRepository repository) 
     private const string PrefFromCurrency = "FromCurrency";
     private const string PrefToCurrency = "ToCurrency";
     private const string PrefFromAmount = "FromAmount";
-
-    [ObservableProperty] private ObservableCollection<CurrencyItem> _currencies = [];
-
-    [ObservableProperty] private string _fromAmount = "1";
-
-    [ObservableProperty] private CurrencyItem? _fromCurrency;
-
-    [ObservableProperty] private bool _isLoading;
+    private const int AmountDecimals = 2;
 
     private bool _isUpdating;
-    private bool _isInitialized;
+    private bool _hasLoadedCurrencies;
+    private bool _reloadPending;
 
-    [ObservableProperty] private DateTime _maxDate = DateTime.Today;
+    [ObservableProperty]
+    private ObservableCollection<CurrencyItem> currencies = [];
 
-    [ObservableProperty] private string _rateInfoText = string.Empty;
+    [ObservableProperty]
+    private string fromAmount = "1";
 
-    [ObservableProperty] private DateTime _selectedDate = DateTime.Today;
+    [ObservableProperty]
+    private CurrencyItem? fromCurrency;
 
-    [ObservableProperty] private string _toAmount = string.Empty;
+    [ObservableProperty]
+    private bool isLoading;
 
-    [ObservableProperty] private CurrencyItem? _toCurrency;
+    [ObservableProperty]
+    private DateTime maxDate = DateTime.Today;
+
+    [ObservableProperty]
+    private string rateInfoText = string.Empty;
+
+    [ObservableProperty]
+    private DateTime selectedDate = DateTime.Today;
+
+    [ObservableProperty]
+    private string toAmount = string.Empty;
+
+    [ObservableProperty]
+    private CurrencyItem? toCurrency;
 
     partial void OnSelectedDateChanged(DateTime value)
     {
@@ -41,34 +52,90 @@ public partial class CurrencyConverterViewModel(ICurrencyRepository repository) 
             return;
 
         SaveState();
-        LoadCurrenciesCommand.Execute(null);
+        RequestReload();
     }
 
     partial void OnFromCurrencyChanged(CurrencyItem? value)
     {
+        if (_isUpdating)
+            return;
+
         SaveState();
         ConvertFromSource();
     }
 
     partial void OnToCurrencyChanged(CurrencyItem? value)
     {
+        if (_isUpdating)
+            return;
+
         SaveState();
         ConvertFromSource();
     }
 
     partial void OnFromAmountChanged(string value)
     {
-        if (!_isUpdating)
-        {
-            SaveState();
-            ConvertFromSource();
-        }
+        if (_isUpdating)
+            return;
+
+        SaveState();
+        ConvertFromSource();
     }
 
     partial void OnToAmountChanged(string value)
     {
-        if (!_isUpdating)
-            ConvertFromTarget();
+        if (_isUpdating)
+            return;
+
+        ConvertFromTarget();
+    }
+
+    [RelayCommand]
+    private async Task InitializeAsync()
+    {
+        RestoreState();
+
+        try
+        {
+            await LoadCurrenciesCommand.ExecuteAsync(null);
+        }
+        catch (OperationCanceledException)
+        {
+            // Ignore canceled load.
+        }
+    }
+
+    private void RequestReload()
+    {
+        if (LoadCurrenciesCommand.IsRunning)
+        {
+            _reloadPending = true;
+            LoadCurrenciesCommand.Cancel();
+            return;
+        }
+
+        _ = LoadCurrenciesCommand.ExecuteAsync(null);
+    }
+
+    [RelayCommand]
+    private void SwapCurrencies()
+    {
+        if (FromCurrency == null || ToCurrency == null)
+            return;
+
+        _isUpdating = true;
+        try
+        {
+            (FromCurrency, ToCurrency) = (ToCurrency, FromCurrency);
+            (FromAmount, ToAmount) = (ToAmount, FromAmount);
+        }
+        finally
+        {
+            _isUpdating = false;
+        }
+
+        SaveState();
+        ConvertFromSource();
     }
 
     [RelayCommand]
@@ -80,24 +147,26 @@ public partial class CurrencyConverterViewModel(ICurrencyRepository repository) 
         {
             var date = DateOnly.FromDateTime(SelectedDate);
 
-            var result = await repository.GetRatesByDateAsync(date);
+            var result = await repository.GetRatesByDateAsync(date, cancellationToken);
 
             if (cancellationToken.IsCancellationRequested)
                 return;
 
-            RateInfoText = $"Курс на {result.ActualDate:d MMMM yyyy}";
+            var currencyList = result.Currencies.ToList();
+            RateInfoText = currencyList.Count > 0
+                ? $"Курс на {result.ActualDate:d MMMM yyyy}"
+                : "Нет данных за выбранную дату";
 
             var previousFromCode = FromCurrency?.CharCode;
             var previousToCode = ToCurrency?.CharCode;
 
-            // При первой загрузке восстанавливаем сохранённые значения
-            if (!_isInitialized)
+            if (!_hasLoadedCurrencies)
             {
                 previousFromCode = Preferences.Default.Get(PrefFromCurrency, "RUB");
                 previousToCode = Preferences.Default.Get(PrefToCurrency, "USD");
             }
 
-            var items = new List<CurrencyItem>
+            var items = new List<CurrencyItem>(currencyList.Count + 1)
             {
                 new()
                 {
@@ -108,23 +177,26 @@ public partial class CurrencyConverterViewModel(ICurrencyRepository repository) 
                 }
             };
 
-            items.AddRange(result.Currencies.Select(c => new CurrencyItem
+            items.AddRange(currencyList.Select(CurrencyItem.FromDomain));
+
+            _isUpdating = true;
+            try
             {
-                CharCode = c.CharCode,
-                Name = c.Name,
-                Nominal = c.Nominal,
-                Value = c.Value
-            }));
+                Currencies = new ObservableCollection<CurrencyItem>(items);
 
-            Currencies = new ObservableCollection<CurrencyItem>(items);
+                FromCurrency = Currencies.FirstOrDefault(c => c.CharCode == previousFromCode)
+                               ?? Currencies.FirstOrDefault(c => c.CharCode == "RUB");
 
-            FromCurrency = Currencies.FirstOrDefault(c => c.CharCode == previousFromCode)
-                           ?? Currencies.FirstOrDefault(c => c.CharCode == "RUB");
+                ToCurrency = Currencies.FirstOrDefault(c => c.CharCode == previousToCode)
+                             ?? Currencies.FirstOrDefault(c => c.CharCode == "USD");
+            }
+            finally
+            {
+                _isUpdating = false;
+            }
 
-            ToCurrency = Currencies.FirstOrDefault(c => c.CharCode == previousToCode)
-                         ?? Currencies.FirstOrDefault(c => c.CharCode == "USD");
-
-            _isInitialized = true;
+            _hasLoadedCurrencies = true;
+            ConvertFromSource();
         }
         catch (OperationCanceledException)
         {
@@ -137,21 +209,28 @@ public partial class CurrencyConverterViewModel(ICurrencyRepository repository) 
         finally
         {
             IsLoading = false;
+
+            if (_reloadPending)
+            {
+                _reloadPending = false;
+                _ = LoadCurrenciesCommand.ExecuteAsync(null);
+            }
         }
     }
 
     /// <summary>
     /// Загружает сохранённое состояние из Preferences
     /// </summary>
-    public void RestoreState()
+    private void RestoreState()
     {
         _isUpdating = true;
         try
         {
+            MaxDate = DateTime.Today;
+
             var savedDateTicks = Preferences.Default.Get(PrefSelectedDate, DateTime.Today.Ticks);
             var savedDate = new DateTime(savedDateTicks);
 
-            // Гарантируем, что дата не больше максимальной
             SelectedDate = savedDate <= MaxDate ? savedDate : MaxDate;
 
             FromAmount = Preferences.Default.Get(PrefFromAmount, "1");
@@ -164,13 +243,13 @@ public partial class CurrencyConverterViewModel(ICurrencyRepository repository) 
 
     private void SaveState()
     {
-        if (!_isInitialized)
+        if (!_hasLoadedCurrencies)
             return;
 
         Preferences.Default.Set(PrefSelectedDate, SelectedDate.Ticks);
         Preferences.Default.Set(PrefFromCurrency, FromCurrency?.CharCode ?? "RUB");
         Preferences.Default.Set(PrefToCurrency, ToCurrency?.CharCode ?? "USD");
-        Preferences.Default.Set(PrefFromAmount, FromAmount ?? "1");
+        Preferences.Default.Set(PrefFromAmount, string.IsNullOrWhiteSpace(FromAmount) ? "1" : FromAmount);
     }
 
     private void ConvertFromSource()
@@ -178,7 +257,7 @@ public partial class CurrencyConverterViewModel(ICurrencyRepository repository) 
         if (FromCurrency == null || ToCurrency == null)
             return;
 
-        if (!decimal.TryParse(FromAmount, NumberStyles.Any, CultureInfo.CurrentCulture, out var amount))
+        if (!TryParseAmount(FromAmount, out var amount))
             return;
 
         _isUpdating = true;
@@ -188,7 +267,7 @@ public partial class CurrencyConverterViewModel(ICurrencyRepository repository) 
             var amountInRub = amount * FromCurrency.RatePerUnit;
             var result = amountInRub / ToCurrency.RatePerUnit;
 
-            ToAmount = Math.Round(result, 2).ToString(CultureInfo.CurrentCulture);
+            ToAmount = FormatAmount(result);
         }
         finally
         {
@@ -201,7 +280,7 @@ public partial class CurrencyConverterViewModel(ICurrencyRepository repository) 
         if (FromCurrency == null || ToCurrency == null)
             return;
 
-        if (!decimal.TryParse(ToAmount, NumberStyles.Any, CultureInfo.CurrentCulture, out var amount))
+        if (!TryParseAmount(ToAmount, out var amount))
             return;
 
         _isUpdating = true;
@@ -211,11 +290,21 @@ public partial class CurrencyConverterViewModel(ICurrencyRepository repository) 
             var amountInRub = amount * ToCurrency.RatePerUnit;
             var result = amountInRub / FromCurrency.RatePerUnit;
 
-            FromAmount = Math.Round(result, 2).ToString(CultureInfo.CurrentCulture);
+            FromAmount = FormatAmount(result);
         }
         finally
         {
             _isUpdating = false;
         }
+    }
+
+    private static bool TryParseAmount(string? value, out decimal amount)
+    {
+        return decimal.TryParse(value, NumberStyles.Number, CultureInfo.CurrentCulture, out amount);
+    }
+
+    private static string FormatAmount(decimal amount)
+    {
+        return Math.Round(amount, AmountDecimals).ToString(CultureInfo.CurrentCulture);
     }
 }

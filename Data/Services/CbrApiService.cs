@@ -13,17 +13,19 @@ public class CbrApiService(HttpClient httpClient) : ICbrApiService
     private const int MaxDaysBack = 10;
 
     /// <inheritdoc />
-    public async Task<CbrResponseDto?> GetRatesByDateAsync(DateOnly date)
+    public async Task<CbrResponseDto?> GetRatesByDateAsync(DateOnly date, CancellationToken cancellationToken = default)
     {
         Debug.WriteLine($"[API] GetRatesByDateAsync called for date: {date:yyyy-MM-dd}");
 
         // Пробуем несколько дат назад, если на запрошенную нет данных (выходные/праздники)
         for (var i = 0; i < MaxDaysBack; i++)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var targetDate = date.AddDays(-i);
             Debug.WriteLine($"[API] Trying date: {targetDate:yyyy-MM-dd} (offset: {i})");
 
-            var response = await TryGetRatesForDateAsync(targetDate).ConfigureAwait(false);
+            var response = await TryGetRatesForDateAsync(targetDate, cancellationToken).ConfigureAwait(false);
 
             if (response == null) continue;
 
@@ -38,7 +40,7 @@ public class CbrApiService(HttpClient httpClient) : ICbrApiService
         return null;
     }
 
-    private async Task<CbrResponseDto?> TryGetRatesForDateAsync(DateOnly date)
+    private async Task<CbrResponseDto?> TryGetRatesForDateAsync(DateOnly date, CancellationToken cancellationToken)
     {
         try
         {
@@ -47,7 +49,7 @@ public class CbrApiService(HttpClient httpClient) : ICbrApiService
             Debug.WriteLine($"[API] URL: {url}");
 
             using var response = await httpClient
-                .GetAsync(url, HttpCompletionOption.ResponseHeadersRead)
+                .GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
                 .ConfigureAwait(false);
 
             Debug.WriteLine($"[API] HTTP Status: {response.StatusCode}");
@@ -55,13 +57,17 @@ public class CbrApiService(HttpClient httpClient) : ICbrApiService
             if (!response.IsSuccessStatusCode)
                 return null;
 
-            await using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+            await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
             var dto = await JsonSerializer
-                .DeserializeAsync(stream, CbrJsonContext.Default.CbrResponseDto)
+                .DeserializeAsync(stream, CbrJsonContext.Default.CbrResponseDto, cancellationToken)
                 .ConfigureAwait(false);
             Debug.WriteLine($"[API] Deserialized: {dto?.Valute.Count ?? 0} currencies");
 
             return dto;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch (Exception ex)
         {

@@ -2,7 +2,7 @@ using UI.ViewModels;
 
 namespace UI.Views;
 
-public partial class CurrencyConverterPage : ContentPage
+public partial class CurrencyConverterPage
 {
     public CurrencyConverterPage(CurrencyConverterViewModel viewModel)
     {
@@ -15,9 +15,6 @@ public partial class CurrencyConverterPage : ContentPage
         base.OnAppearing();
 
         if (BindingContext is CurrencyConverterViewModel vm)
-        {
-            vm.RestoreState();
-            await vm.LoadCurrenciesCommand.ExecuteAsync(null);
-        }
+            await vm.InitializeCommand.ExecuteAsync(null);
     }
 }
